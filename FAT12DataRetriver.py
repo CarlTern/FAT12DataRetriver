@@ -142,6 +142,7 @@ def getFATEntries(hexDump, FATNumber):
                         print("-----------------------")
                         print(sector)
                         print("-----------------------" + "\n")
+                        break
                     else:
                         NmbrOfEntris = input("How many entries(* for all): ")
                         counter = 0
