@@ -91,20 +91,21 @@ def getFATEntries(hexDump):
     bootSector = hexDump.read(512)
     #We are now in the beginning of FAT1
     #We have exaclty one entry per cluster
-    for i in range(0, 100):
+    for i in range(0, 200):
+        if(i%2 == 0):
             #Since we have 12 bit FAT one entry is 1.5 byte. Therefore we need to read 3 bytes at a time.
             entry = hexDump.read(3).hex()
-            entry1 = "0x" + entry[3] + entry[0] + entry[1]
+            entry1 = str(i) + ": 0x" + entry[3] + entry[0] + entry[1]
             if(entry1 == "0xff7"):
                 print(entry1 + " : BAD CLUSTER")
             else:
                 print(entry1)
-            entry2 = "0x" + entry[5] + entry[4] + entry[2]
+            entry2 = str(i+1) + ": 0x" + entry[4] + entry[5] + entry[2]
             if(entry2 == "0xff7"):
                 print(entry2 + " : BAD CLUSTER")
             else:
                 print(entry2)
-                   
+
 #Here we run the program.
 main() 
     
