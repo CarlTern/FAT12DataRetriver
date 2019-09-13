@@ -122,23 +122,43 @@ def getFATEntries(hexDump, FATNumber):
     #Rest of the boot sector is irrelelevant
     hexDump.read(450)
     #We are now in the beginning of FAT1
-    #We have exaclty one entry per cluster/
+    #We have exaclty one entry per cluster
+    entries = input("Entry to print(* for all): ")
     if(FATNumber == 1):
-        for i in range(1, 10):
-            print("Entry: " + str(i))
-            entry = hexDump.read(bytesPerSector)
-            print("-----------------------")
-            print(entry)
-            print("-----------------------" + "\n")
+        if(entries == "*"):
+            for i in range(1, 10):
+                print("Entry: " + str(i))
+                entry = hexDump.read(bytesPerSector)
+                print("-----------------------")
+                print(entry)
+                print("-----------------------" + "\n")
+        else:
+            for i in range(1, 10):
+                if(i == entries):
+                    print("Entry: " + str(i))
+                    entry = hexDump.read(bytesPerSector)
+                    print("-----------------------")
+                    print(entry)
+                    print("-----------------------" + "\n")
+
     if(FATNumber == 2):
         #Skip FAT1
         hexDump.read(bytesPerSector * 9)
-        for i in range(1, 10):
-            print("Entry: " + str(i))
-            entry = hexDump.read(bytesPerSector)
-            print("-----------------------")
-            print(entry)
-            print("-----------------------" + "\n")
+        if(entries == "*"):
+            for i in range(1, 10):
+                print("Entry: " + str(i))
+                entry = hexDump.read(bytesPerSector)
+                print("-----------------------")
+                print(entry)
+                print("-----------------------" + "\n")
+        else:
+            for i in range(1, 10):
+                if(i == entries):
+                    print("Entry: " + str(i))
+                    entry = hexDump.read(bytesPerSector)
+                    print("-----------------------")
+                    print(entry)
+                    print("-----------------------" + "\n")
 
 #Here we run the program.
 main() 
