@@ -123,37 +123,76 @@ def getFATEntries(hexDump, FATNumber):
     hexDump.read(450)
     #We are now in the beginning of FAT1
     #We have exaclty one entry per cluster
-    entries = input("Entry to print(* for all): ")
+    sector = input("Sector to print(* for all): ")
     if(FATNumber == 1):
-        if(entries == "*"):
+        if(sector == "*"):
             for i in range(1, 10):
-                print("Entry: " + str(i))
-                entry = hexDump.read(bytesPerSector)
+                print("Sector: " + str(i))
+                sector = hexDump.read(bytesPerSector)
                 print("-----------------------")
-                print(entry)
+                print(sector)
                 print("-----------------------" + "\n")
         else:
             for i in range(1, 10):
-                if(i == int(entries)):
-                    print("Entry: " + str(i))
-                    entry = hexDump.read(bytesPerSector)
-                    print("-----------------------")
-                    print(entry)
-                    print("-----------------------" + "\n")
+                if(i == int(sector)):
+                    sectorOrEntries = input("Print entire sector or table entries(sector/entries): ")
+                    if(sectorOrEntries == "sector"):
+                        print("Sector: " + str(i))
+                        sector = hexDump.read(bytesPerSector)
+                        print("-----------------------")
+                        print(sector)
+                        print("-----------------------" + "\n")
+                    else:
+                        NmbrOfEntris = input("How many entries(* for all): ")
+                        counter = 0
+                        for i in range(1, int(bytesPerSector)):
+                            if(i % 2 ==0):
+                                if(NmbrOfEntris == "*"):
+                                    # @TODO As we cant divide 512/3 to an integer some data might be missed in the end of the FAT table, we should write logic for handling this.
+                                    entry = hexDump.read(3).hex()
+                                    entry1 = entry[:int(len(entry)/2)]
+                                    entry2 = entry[int(len(entry)/2):]
+                                    print("Entry " + str(i - 1) + ": ")
+                                    print(entry1)
+                                    print("Entry " + str(i) + ": ")
+                                    print(entry2)
+                                elif(counter == int(NmbrOfEntris)):
+                                    break
+                                else:
+                                    #Since we have 12 bit FAT one entry is 1.5 byte. Therefore we need to read 3 bytes at a time.
+                                    entry = hexDump.read(3).hex()
+                                    entry1 = entry[:int(len(entry)/2)]
+                                    entry2 = entry[int(len(entry)/2):]
+                                    print((entry1))
+                                    if(entry1 == "FF7"):
+                                        print("Entry " + str(i - 1) + " BAD CLUSTER: ")
+                                    else:
+                                        print("Entry " + str(i - 1) + ": ")
+                                    print(entry1)
+                                    if(entry2 == "FF7"):
+                                        print("Entry " + str(i) + " BAD CLUSTER: ")
+                                    else:
+                                        print("Entry " + str(i) + ": ")
+                                    print(entry2)
+                                    counter = counter + 2
+                else:
+                    #We have to read the sector even though we are not interested of the data in it. 
+                    hexDump.read(bytesPerSector)                
+
 
     if(FATNumber == 2):
         #Skip FAT1
         hexDump.read(bytesPerSector * 9)
-        if(entries == "*"):
+        if(sector == "*"):
             for i in range(1, 10):
-                print("Entry: " + str(i))
-                entry = hexDump.read(bytesPerSector)
+                print("Sector: " + str(i))
+                sector = hexDump.read(bytesPerSector)
                 print("-----------------------")
-                print(entry)
+                print(sector)
                 print("-----------------------" + "\n")
         else:
             for i in range(1, 10):
-                if(i == int(entries)):
+                if(i == int(sector)):
                     print("Entry: " + str(i))
                     entry = hexDump.read(bytesPerSector)
                     print("-----------------------")
