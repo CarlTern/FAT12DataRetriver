@@ -27,6 +27,7 @@ def main():
 def printHelp():
     print("Availibale commands: ")
     print("help       - Print available commands")
+    print("?          - Print available commands")
     print("bootSector - Retrive data from boot sector and print")
     print("FAT1       - Print all FAT entries in FAT Table 1")
     print("FAT2       - Print all FAT entries in FAT Table 2")
@@ -139,9 +140,6 @@ def getFATEntries(hexDump, FATNumber):
             print(entry)
             print("-----------------------" + "\n")
 
-
-
-        
 #Here we run the program.
 main() 
     
