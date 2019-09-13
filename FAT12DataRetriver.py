@@ -134,7 +134,7 @@ def getFATEntries(hexDump, FATNumber):
                 print("-----------------------" + "\n")
         else:
             for i in range(1, 10):
-                if(i == entries):
+                if(i == int(entries)):
                     print("Entry: " + str(i))
                     entry = hexDump.read(bytesPerSector)
                     print("-----------------------")
@@ -153,7 +153,7 @@ def getFATEntries(hexDump, FATNumber):
                 print("-----------------------" + "\n")
         else:
             for i in range(1, 10):
-                if(i == entries):
+                if(i == int(entries)):
                     print("Entry: " + str(i))
                     entry = hexDump.read(bytesPerSector)
                     print("-----------------------")
