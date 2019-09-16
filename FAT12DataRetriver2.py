@@ -15,7 +15,11 @@ def main():
             elif(operation == "FAT1"):
                 getFATEntries(hexDump)
             elif(operation == "data"):
-                getData(hexDump)
+                bootSector = hexDump.read(512)
+                FAT1 = hexDump.read(512 * 9)
+                FAT2 = hexDump.read(512 * 9)
+                rootDirOffset = 0x2600
+                getDataRecursivly(224, '', hexDump, 0)
             elif(operation == "exit"):
                 exit()
             else:
@@ -80,27 +84,69 @@ def getFATEntries(hexDump):
             entry2 = str(i+1) + ": 0x" + entry[4] + entry[5] + entry[2]
             print(entry2)
 
-def getDataRecursivly(hexDump, counter):
-    if(counter == 16):
-        exit()
+def extract(hexDump,fileName, fileSizeinBytes):
+    data = hexDump.read(fileSizeinBytes)
+    newFile = open("./" + fileName,"wb+")
+    newFile.write(data)
+    newFile.close
+
+def getCorrectDateAndTimeFormat (hexDump):
+    var = hexDump.read(2).hex()
+    var = bin(int(var, 16))[2:].zfill(8)
+    #var = var[::-1] #toBigEndian
+    if (len(var)!=16):
+        numberOfAdded = 16 - len(var)
+        for i in range(0, numberOfAdded):
+            var = '0' + var 
+    var1 = var[8:]
+    var2 = var[:8]
+    var = var1 + var2
+    return var
+
+def getDataRecursivly(entries, parentFileName, hexDump, counter):
+    dirHasContent = False
+    shallBeExtracted = False
+    if(counter == entries):
+        return True
     #tempHex = hexDump
     #unused or empty directory
     indentifier = hexDump.read(1).hex()
     if( indentifier == "00"):
         hexDump.read(31)
         counter = counter + 1
-        getDataRecursivly(hexDump, counter)
+        getDataRecursivly(entries, '', hexDump, counter)
+        return
     elif(indentifier == "e5"):
-        fileName = hexDump.read(10).hex()
+        print("Parent: " + parentFileName)
+        fileName = hexDump.read(10).hex() 
         fileName = bytes.fromhex(fileName).decode('utf-8')
-        print("filename: " + str(fileName))
+        print("filename(Deleted): " + str(fileName))
     else:
+        print("Parent: " + parentFileName)
         fileName = indentifier + hexDump.read(10).hex() 
-        fileName = bytes.fromhex(fileName).decode('utf-8')
+        fileName = bytes.fromhex(fileName).decode('utf-8') 
         print("filename: " + str(fileName))
     fileAttributes = hexDump.read(1).hex()
     fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
+    fileAttributes = str(fileAttributes)
     print("File attributes: " + str(fileAttributes))
+    fileAttributes = fileAttributes[2:]
+    if(fileAttributes[2:] == "1111"):
+        print("File is on long file format")
+    else:
+        if(fileAttributes[4]== "1"):
+            print("File is hidden.")
+        if(fileAttributes[3] == "1"):
+            print("The file is a system file.")
+        if(fileAttributes[2] == "1"):
+            print("The directory entry contains a volume label.")
+        if(fileAttributes[1] == "1"):
+            print("The entry represents a directory (not a file).") 
+            if( not (fileName[0] == '.' or fileName[0] == '..')):
+                dirHasContent = True
+        if(fileAttributes[0] == "1"):
+            print("File is archived")
+            shallBeExtracted = True
     WinNTReserved = hexDump.read(1)
     creationMillsecondStamp = hexDump.read(1).hex()
     creationMillsecondStamp = int(bin(int(creationMillsecondStamp, 16))[2:].zfill(8),2)
@@ -130,56 +176,27 @@ def getDataRecursivly(hexDump, counter):
     print("Last Write date: " + str(lastWriteDateDayInt) + "/" + str(lastWriteDateMonthInt) + "/" + str(lastWriteDateYearInt + 1980) +  "\t" + "Last Write Time: " + str(lastWriteTimeHourInt) + ":" + str(lastWriteTimeMinuteInt) + ":" + str(lastWriteTimeSecondInt))
     firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
     print("First logical cluster file: " + str(firstLogicalClusterOfFile))
-    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
+    fileSizeinBytes = hexDump.read(4).hex()
+    fileSizeinBytes = fileSizeinBytes[::-1]
+    fileSizeinBytes = int(fileSizeinBytes, 16)
     print("File size: " + str(fileSizeinBytes) + " bytes")
     print("--------------------------------")
-    counter = counter + 1 
-    getDataRecursivly(hexDump, counter)
-
-def getCorrectDateAndTimeFormat (hexDump):
-    var = hexDump.read(2).hex()
-    var = bin(int(var, 16))[2:].zfill(8)
-    #var = var[::-1] #toBigEndian
-    if (len(var)!=16):
-        numberOfAdded = 16 - len(var)
-        for i in range(0, numberOfAdded):
-            var = '0' + var 
-    var1 = var[8:]
-    var2 = var[:8]
-    var = var1 + var2
-    return var
-
-def getData(hexDump):
-    bootSector = hexDump.read(512)
-    FAT1 = hexDump.read(512 * 9)
-    FAT2 = hexDump.read(512 * 9)
-    rootDirOffset = 0x2600
-
-    fileName = hexDump.read(11)
-    print("\n" + "Root Directory:")
-    print("filename: " + str(fileName))
-    fileAttributes = hexDump.read(1).hex()
-    fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
-    print("File attributes: " + str(fileAttributes))
-    WinNTReserved = hexDump.read(1)
-    creationMillsecondStamp = hexDump.read(1)
-    creationTime = array.array('h', hexDump.read(2))[0]
-    creationDate = array.array('h', hexDump.read(2))[0]
-    print("Date: " + str(creationDate) + "\t" + "Time: " + str(creationTime) + "\t" + "ms: " + str(creationMillsecondStamp))
-    lastAccessDate = array.array('h', hexDump.read(2))[0]
-    print("Last access data: " + str(lastAccessDate))
-    ReservedForFAT32 = hexDump.read(2)
-    lastWriteTime = array.array('h', hexDump.read(2))[0]
-    lastWriteDate = array.array('h', hexDump.read(2))[0]
-    print("Last Write date and time" + str(lastWriteDate) + " : " + str(lastWriteTime))
-    firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
-    print("First logical cluster file: " + str(firstLogicalClusterOfFile))
-    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
-    print("File size: " + str(fileSizeinBytes) + " bytes")
-    print("--------------------------------")
-
-    getDataRecursivly(hexDump, 1)
-    #Root directory begin. 
+    if(dirHasContent):
+        firstLogicalClusterOfFile = 33 + firstLogicalClusterOfFile - 2
+        newHexDump = open("./image.dat", "rb")
+        newHexDump.read(firstLogicalClusterOfFile * 512)
+        #we are in begining of right cluster
+        getDataRecursivly(16, fileName, newHexDump, 0)
+    elif(shallBeExtracted):
+        firstLogicalClusterOfFile = 33 + firstLogicalClusterOfFile - 2
+        newHexDump = open("./image.dat", "rb")
+        newHexDump.read(firstLogicalClusterOfFile * 512)
+        fileName = fileName.replace(" ", "")
+        fileName = fileName[:-3] + "." + fileName[-3:]
+        extract(newHexDump, fileName, fileSizeinBytes)
+        #we are in begining of right cluster
+    counter = counter + 1
+    getDataRecursivly(entries, parentFileName, hexDump, counter)
 
 #Here we run the program.
 main() 
