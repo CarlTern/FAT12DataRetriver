@@ -91,7 +91,7 @@ def getDataRecursivly(hexDump, counter):
         counter = counter + 1
         getDataRecursivly(hexDump, counter)
     elif(indentifier == "e5"):
-        fileName = hexDump.read(10).hex() 
+        fileName = hexDump.read(10).hex()
         fileName = bytes.fromhex(fileName).decode('utf-8')
         print("filename: " + str(fileName))
     else:
@@ -102,16 +102,32 @@ def getDataRecursivly(hexDump, counter):
     fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
     print("File attributes: " + str(fileAttributes))
     WinNTReserved = hexDump.read(1)
-    creationMillsecondStamp = hexDump.read(1)
-    creationTime = array.array('h', hexDump.read(2))[0]
-    creationDate = array.array('h', hexDump.read(2))[0]
-    print("Date: " + str(creationDate) + "\t" + "Time: " + str(creationTime) + "\t" + "ms: " + str(creationMillsecondStamp))
-    lastAccessDate = array.array('h', hexDump.read(2))[0]
-    print("Last access date: " + str(lastAccessDate))
+    creationMillsecondStamp = hexDump.read(1).hex()
+    creationMillsecondStamp = int(bin(int(creationMillsecondStamp, 16))[2:].zfill(8),2)
+    creationTime = getCorrectDateAndTimeFormat(hexDump)
+    creationTimeHourInt = int(creationTime[:-11],2)
+    creationTimeMinuteInt = int(creationTime[5:-5],2)
+    creationTimeSecondInt = int(creationTime[11:],2)*2
+    creationDate = getCorrectDateAndTimeFormat(hexDump)
+    creationDateYearInt = int(creationDate[:-9],2)
+    creationDateMonthInt = int(creationDate[7:-5],2)
+    creationDateDayInt = int(creationDate[11:],2)
+    print("Date: " + str(creationDateDayInt) + "/" + str(creationDateMonthInt) + "/" + str(creationDateYearInt + 1980) +  "\t" + "Time: " + str(creationTimeHourInt) + ":" + str(creationTimeMinuteInt) + ":" + str(creationTimeSecondInt) + "\t" + "ms: " + str(creationMillsecondStamp))
+    lastAccessDate = getCorrectDateAndTimeFormat(hexDump)
+    lastAccessDateYearInt = int(lastAccessDate[:-9],2)
+    lastAccessDateMonthInt = int(lastAccessDate[7:-5],2)
+    lastAccessDateDayInt = int(lastAccessDate[11:],2)
+    print("Last access date: " + str(lastAccessDateDayInt) + "/" + str(lastAccessDateMonthInt) + "/" + str(lastAccessDateYearInt + 1980))
     ReservedForFAT32 = hexDump.read(2)
-    lastWriteTime = array.array('h', hexDump.read(2))[0]
-    lastWriteDate = array.array('h', hexDump.read(2))[0]
-    print("Last Write date and time: " + str(lastWriteDate) + " : " + str(lastWriteTime))
+    lastWriteTime = getCorrectDateAndTimeFormat(hexDump)
+    lastWriteTimeHourInt = int(lastWriteTime[:-11],2)
+    lastWriteTimeMinuteInt = int(lastWriteTime[5:-5],2)
+    lastWriteTimeSecondInt = int(lastWriteTime[11:],2)*2
+    lastWriteDate = getCorrectDateAndTimeFormat(hexDump)
+    lastWriteDateYearInt = int(lastWriteDate[:-9],2)
+    lastWriteDateMonthInt = int(lastWriteDate[7:-5],2)
+    lastWriteDateDayInt = int(lastWriteDate[11:],2)
+    print("Last Write date: " + str(lastWriteDateDayInt) + "/" + str(lastWriteDateMonthInt) + "/" + str(lastWriteDateYearInt + 1980) +  "\t" + "Last Write Time: " + str(lastWriteTimeHourInt) + ":" + str(lastWriteTimeMinuteInt) + ":" + str(lastWriteTimeSecondInt))
     firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
     print("First logical cluster file: " + str(firstLogicalClusterOfFile))
     fileSizeinBytes = array.array('h', hexDump.read(4))[0]
@@ -119,6 +135,19 @@ def getDataRecursivly(hexDump, counter):
     print("--------------------------------")
     counter = counter + 1 
     getDataRecursivly(hexDump, counter)
+
+def getCorrectDateAndTimeFormat (hexDump):
+    var = hexDump.read(2).hex()
+    var = bin(int(var, 16))[2:].zfill(8)
+    #var = var[::-1] #toBigEndian
+    if (len(var)!=16):
+        numberOfAdded = 16 - len(var)
+        for i in range(0, numberOfAdded):
+            var = '0' + var 
+    var1 = var[8:]
+    var2 = var[:8]
+    var = var1 + var2
+    return var
 
 def getData(hexDump):
     bootSector = hexDump.read(512)
