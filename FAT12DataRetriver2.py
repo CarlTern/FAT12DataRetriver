@@ -81,7 +81,7 @@ def getFATEntries(hexDump):
             print(entry2)
 
 def getDataRecursivly(hexDump, counter):
-    if(counter == 16):
+    if(counter == 224):
         exit()
     #tempHex = hexDump
     #unused or empty directory
@@ -93,17 +93,32 @@ def getDataRecursivly(hexDump, counter):
     elif(indentifier == "e5"):
         fileName = hexDump.read(10).hex() 
         fileName = bytes.fromhex(fileName).decode('utf-8')
-        print("filename: " + str(fileName))
+        print("filename(empty): " + str(fileName))
     else:
         fileName = indentifier + hexDump.read(10).hex() 
         fileName = bytes.fromhex(fileName).decode('utf-8')
         print("filename: " + str(fileName))
     fileAttributes = hexDump.read(1).hex()
     fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
+    fileAttributes = str(fileAttributes)
     print("File attributes: " + str(fileAttributes))
+    fileAttributes = fileAttributes[2:]
+    if(fileAttributes[2:] == "1111"):
+        print("File is on long file format")
+    else:
+        if(fileAttributes[4]== "1"):
+            print("File is hidden.")
+        if(fileAttributes[3] == "1"):
+            print("The file is a system file.")
+        if(fileAttributes[2] == "1"):
+            print("The directory entry contains a volume label.")
+        if(fileAttributes[1] == "1"):
+            print("The entry represents a directory (not a file).")
+        if(fileAttributes[0] == "1"):
+            print("File is archived")
     WinNTReserved = hexDump.read(1)
     creationMillsecondStamp = hexDump.read(1)
-    creationTime = array.array('h', hexDump.read(2))[0]
+    creationTime = hexDump.read(2)
     creationDate = array.array('h', hexDump.read(2))[0]
     print("Date: " + str(creationDate) + "\t" + "Time: " + str(creationTime) + "\t" + "ms: " + str(creationMillsecondStamp))
     lastAccessDate = array.array('h', hexDump.read(2))[0]
@@ -114,7 +129,9 @@ def getDataRecursivly(hexDump, counter):
     print("Last Write date and time: " + str(lastWriteDate) + " : " + str(lastWriteTime))
     firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
     print("First logical cluster file: " + str(firstLogicalClusterOfFile))
-    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
+    fileSizeinBytes = hexDump.read(4).hex()
+    fileSizeinBytes = fileSizeinBytes[::-1]
+    fileSizeinBytes = int(fileSizeinBytes, 16)
     print("File size: " + str(fileSizeinBytes) + " bytes")
     print("--------------------------------")
     counter = counter + 1 
@@ -131,7 +148,22 @@ def getData(hexDump):
     print("filename: " + str(fileName))
     fileAttributes = hexDump.read(1).hex()
     fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
+    fileAttributes = str(fileAttributes)
     print("File attributes: " + str(fileAttributes))
+    fileAttributes = fileAttributes[2:]
+    if(fileAttributes[2:] == "1111"):
+        print("File is on long file format")
+    else:
+        if(fileAttributes[4]== "1"):
+            print("File is hidden.")
+        if(fileAttributes[3] == "1"):
+            print("The file is a system file.")
+        if(fileAttributes[2] == "1"):
+            print("The directory entry contains a volume label.")
+        if(fileAttributes[1] == "1"):
+            print("The entry represents a directory (not a file).")
+        if(fileAttributes[0] == "1"):
+            print("File is archived")
     WinNTReserved = hexDump.read(1)
     creationMillsecondStamp = hexDump.read(1)
     creationTime = array.array('h', hexDump.read(2))[0]
@@ -145,7 +177,10 @@ def getData(hexDump):
     print("Last Write date and time" + str(lastWriteDate) + " : " + str(lastWriteTime))
     firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
     print("First logical cluster file: " + str(firstLogicalClusterOfFile))
-    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
+    fileSizeinBytes = hexDump.read(4).hex()
+    fileSizeinBytes = fileSizeinBytes[::-1]
+    fileSizeinBytes = int(fileSizeinBytes, 16)
+
     print("File size: " + str(fileSizeinBytes) + " bytes")
     print("--------------------------------")
 
