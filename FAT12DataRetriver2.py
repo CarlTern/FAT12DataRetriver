@@ -2,9 +2,9 @@ import binascii
 import array
 
 def main():
-    print("Welcome to floppyDiskDataRetriver!" + "\n")
+    print("Welcome to floppyDiskDataRetriver!")
     while(True):
-        path = input("Enter relative path to FAT12 image file:" + "\n")
+        path = input("Enter relative path to FAT12 image file:")
         if (path==''):
             path = './image.dat'
         while(True):
@@ -14,8 +14,8 @@ def main():
                 getBootSectorData(hexDump)
             elif(operation == "FAT1"):
                 getFATEntries(hexDump)
-            elif(operation == "FAT2"):
-                getFATEntries(hexDump, 2)
+            elif(operation == "data"):
+                getData(hexDump)
             elif(operation == "exit"):
                 exit()
             else:
@@ -25,67 +25,46 @@ def main():
 def getBootSectorData(hexDump):
     print("Boot sector:" + "\n")
     startOfBootstrapRoutine = hexDump.read(3)
-    print("Start of bootstrap routine: " + str(startOfBootstrapRoutine) + "\n")
+    print("Start of bootstrap routine: " + str(startOfBootstrapRoutine))
     OEMName = hexDump.read(8)
-    print("OEM name: " + str(OEMName) + "\n")
+    print("OEM name: " + str(OEMName))
     bytesPerSector = array.array('h', hexDump.read(2))[0]
-    print("Bytes per sector: " + str(bytesPerSector) + "\n")
+    print("Bytes per sector: " + str(bytesPerSector))
     sectorsPerCluster = int(binascii.hexlify(hexDump.read(1)))
-    print("Sectors per cluster: " + str(sectorsPerCluster) + "\n")
+    print("Sectors per cluster: " + str(sectorsPerCluster))
     numberOfReservedSectors = array.array('h', hexDump.read(2))[0]
-    print("Number of Reserved sectors: " + str(numberOfReservedSectors) + "\n")
+    print("Number of Reserved sectors: " + str(numberOfReservedSectors))
     numberOfFATs = int(binascii.hexlify(hexDump.read(1)))
-    print("Number of FATs: " + str(numberOfFATs) + "\n")
+    print("Number of FATs: " + str(numberOfFATs))
     maximumNumberOfRootDirectoryEntries = array.array('h', hexDump.read(2))[0]
-    print("Max number of RootDir Entries: " + str(maximumNumberOfRootDirectoryEntries) + "\n")
+    print("Max number of RootDir Entries: " + str(maximumNumberOfRootDirectoryEntries))
     totalSectorCount = array.array('h', hexDump.read(2))[0]
-    print("Total sector count: " + str(totalSectorCount) + "\n")
+    print("Total sector count: " + str(totalSectorCount))
     mediaType = hexDump.read(1)
-    print("Media type: " + str(mediaType) + "\n")
+    print("Media type: " + str(mediaType))
     sectorsPerFAT = array.array('h', hexDump.read(2))[0]
-    print("Sectors per FAT: " + str(sectorsPerFAT) + "\n")
+    print("Sectors per FAT: " + str(sectorsPerFAT))
     sectorsPerTrack = array.array('h', hexDump.read(2))[0]
-    print("Sectors per Track: " + str(sectorsPerTrack) + "\n")
+    print("Sectors per Track: " + str(sectorsPerTrack))
     numberOfHeads = array.array('h', hexDump.read(2))[0]
-    print("Number of heads: " + str(numberOfHeads) + "\n")
+    print("Number of heads: " + str(numberOfHeads))
     numberOfHiddenSectors = array.array('h', hexDump.read(4))[0]
-    print("Number of hidden sectors: " + str(numberOfHiddenSectors) + "\n")
+    print("Number of hidden sectors: " + str(numberOfHiddenSectors))
     hexDump.read(6)
     bootSignature = int(binascii.hexlify(hexDump.read(1)))
-    print("bootSignature: " + str(bootSignature) + "\n")
+    print("bootSignature: " + str(bootSignature))
     volumeId = hexDump.read(4)
-    print("VolumeId: " + str(volumeId) + "\n")
+    print("VolumeId: " + str(volumeId))
     volumeLabel = hexDump.read(11)
-    print("VolumeLabel: " + str(volumeLabel) + "\n")
+    print("VolumeLabel: " + str(volumeLabel))
     fileSystemType = hexDump.read(8)
-    print("File system type: " + str(fileSystemType) + "\n")
+    print("File system type: " + str(fileSystemType))
     sizeOfTheDevice = 512 * bytesPerSector
-    print("Size of device: " + str(sizeOfTheDevice) + " Bytes" + "\n")
+    print("Size of device: " + str(sizeOfTheDevice) + " Bytes")
     offsetToStartOfFAT1 = 0x200
-    print("Offset to start FATs: " + str(offsetToStartOfFAT1) + "\n")
+    print("Offset to start FATs: " + str(offsetToStartOfFAT1))
     #Rest of the boot sector is irrelelevant
     hexDump.read(450)
-    #We are now in the beginning of FAT1
-    FAT1 = hexDump.read(bytesPerSector * 9)
-    #print(FAT1)
-    #We are now in the beginning of FAT2
-    offsetToStartOfFAT2 = 0x400
-    FAT2 = hexDump.read(bytesPerSector * 9)
-    #We are in the beginning of root directory.
-    rootDirectoryOffset = 0x600
-    #The root directory has a finite size (For FAT12, 14 sectors * 16 directory entries per sector = 224 possible entries
-    
-    # nmbOfBytesToGet = int((bytesPerSector * maximumNumberOfRootDirectoryEntries) / 16)
-    # rootDirectory = hexDump.read(nmbOfBytesToGet)
-    # print(rootDirectory)
-    # fileName = hexDump.read(8)
-    # print(fileName)
-    # extension = hexDump.read(3)
-    # print(extension)
-    
-    #print(rootDirectory)
-    #We are in the beginning of the data ares.
-    offseToDataArea = 0x2200
 
 def getFATEntries(hexDump):
     bootSector = hexDump.read(512)
@@ -95,16 +74,83 @@ def getFATEntries(hexDump):
         if(i%2 == 0):
             #Since we have 12 bit FAT one entry is 1.5 byte. Therefore we need to read 3 bytes at a time.
             entry = hexDump.read(3).hex()
+            dataSector = 33 + i - 2 
             entry1 = str(i) + ": 0x" + entry[3] + entry[0] + entry[1]
-            if(entry1 == "0xff7"):
-                print(entry1 + " : BAD CLUSTER")
-            else:
-                print(entry1)
+            print(entry1)
             entry2 = str(i+1) + ": 0x" + entry[4] + entry[5] + entry[2]
-            if(entry2 == "0xff7"):
-                print(entry2 + " : BAD CLUSTER")
-            else:
-                print(entry2)
+            print(entry2)
+
+def getDataRecursivly(hexDump, counter):
+    if(counter == 16):
+        exit()
+    #tempHex = hexDump
+    #unused or empty directory
+    indentifier = hexDump.read(1).hex()
+    if( indentifier == "00"):
+        hexDump.read(31)
+        counter = counter + 1
+        getDataRecursivly(hexDump, counter)
+    elif(indentifier == "e5"):
+        fileName = hexDump.read(10).hex() 
+        fileName = bytes.fromhex(fileName).decode('utf-8')
+        print("filename: " + str(fileName))
+    else:
+        fileName = indentifier + hexDump.read(10).hex() 
+        fileName = bytes.fromhex(fileName).decode('utf-8')
+        print("filename: " + str(fileName))
+    fileAttributes = hexDump.read(1).hex()
+    fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
+    print("File attributes: " + str(fileAttributes))
+    WinNTReserved = hexDump.read(1)
+    creationMillsecondStamp = hexDump.read(1)
+    creationTime = array.array('h', hexDump.read(2))[0]
+    creationDate = array.array('h', hexDump.read(2))[0]
+    print("Date: " + str(creationDate) + "\t" + "Time: " + str(creationTime) + "\t" + "ms: " + str(creationMillsecondStamp))
+    lastAccessDate = array.array('h', hexDump.read(2))[0]
+    print("Last access date: " + str(lastAccessDate))
+    ReservedForFAT32 = hexDump.read(2)
+    lastWriteTime = array.array('h', hexDump.read(2))[0]
+    lastWriteDate = array.array('h', hexDump.read(2))[0]
+    print("Last Write date and time: " + str(lastWriteDate) + " : " + str(lastWriteTime))
+    firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
+    print("First logical cluster file: " + str(firstLogicalClusterOfFile))
+    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
+    print("File size: " + str(fileSizeinBytes) + " bytes")
+    print("--------------------------------")
+    counter = counter + 1 
+    getDataRecursivly(hexDump, counter)
+
+def getData(hexDump):
+    bootSector = hexDump.read(512)
+    FAT1 = hexDump.read(512 * 9)
+    FAT2 = hexDump.read(512 * 9)
+    rootDirOffset = 0x2600
+
+    fileName = hexDump.read(11)
+    print("\n" + "Root Directory:")
+    print("filename: " + str(fileName))
+    fileAttributes = hexDump.read(1).hex()
+    fileAttributes = bin(int(fileAttributes, 16))[2:].zfill(8)
+    print("File attributes: " + str(fileAttributes))
+    WinNTReserved = hexDump.read(1)
+    creationMillsecondStamp = hexDump.read(1)
+    creationTime = array.array('h', hexDump.read(2))[0]
+    creationDate = array.array('h', hexDump.read(2))[0]
+    print("Date: " + str(creationDate) + "\t" + "Time: " + str(creationTime) + "\t" + "ms: " + str(creationMillsecondStamp))
+    lastAccessDate = array.array('h', hexDump.read(2))[0]
+    print("Last access data: " + str(lastAccessDate))
+    ReservedForFAT32 = hexDump.read(2)
+    lastWriteTime = array.array('h', hexDump.read(2))[0]
+    lastWriteDate = array.array('h', hexDump.read(2))[0]
+    print("Last Write date and time" + str(lastWriteDate) + " : " + str(lastWriteTime))
+    firstLogicalClusterOfFile = array.array('h', hexDump.read(2))[0]
+    print("First logical cluster file: " + str(firstLogicalClusterOfFile))
+    fileSizeinBytes = array.array('h', hexDump.read(4))[0]
+    print("File size: " + str(fileSizeinBytes) + " bytes")
+    print("--------------------------------")
+
+    getDataRecursivly(hexDump, 1)
+    #Root directory begin. 
 
 #Here we run the program.
 main() 
