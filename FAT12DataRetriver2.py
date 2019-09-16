@@ -84,8 +84,15 @@ def getFATEntries(hexDump):
             entry2 = str(i+1) + ": 0x" + entry[4] + entry[5] + entry[2]
             print(entry2)
 
+def extract(hexDump,fileName, fileSizeinBytes):
+    data = hexDump.read(fileSizeinBytes)
+    newFile = open("./" + fileName,"wb+")
+    newFile.write(data)
+    newFile.close
+
 def getDataRecursivly(entries, parentFileName, hexDump, counter):
     dirHasContent = False
+    shallBeExtracted = False
     if(counter == entries):
         return True
     #tempHex = hexDump
@@ -126,6 +133,7 @@ def getDataRecursivly(entries, parentFileName, hexDump, counter):
                 dirHasContent = True
         if(fileAttributes[0] == "1"):
             print("File is archived")
+            shallBeExtracted = True
     WinNTReserved = hexDump.read(1)
     creationMillsecondStamp = hexDump.read(1)
     creationTime = hexDump.read(2)
@@ -150,6 +158,14 @@ def getDataRecursivly(entries, parentFileName, hexDump, counter):
         newHexDump.read(firstLogicalClusterOfFile * 512)
         #we are in begining of right cluster
         getDataRecursivly(16, fileName, newHexDump, 0)
+    elif(shallBeExtracted):
+        firstLogicalClusterOfFile = 33 + firstLogicalClusterOfFile - 2
+        newHexDump = open("./image.dat", "rb")
+        newHexDump.read(firstLogicalClusterOfFile * 512)
+        fileName = fileName.replace(" ", "")
+        fileName = fileName[:-3] + "." + fileName[-3:]
+        extract(newHexDump, fileName, fileSizeinBytes)
+        #we are in begining of right cluster
     counter = counter + 1
     getDataRecursivly(entries, parentFileName, hexDump, counter)
 
