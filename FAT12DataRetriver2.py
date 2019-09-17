@@ -10,7 +10,7 @@ def main():
         while(True):
             hexDump = open(path, "rb")
             operation = input("Enter operation: ")
-            if(operation == "bootSector"):
+            if(operation == "info"):
                 getBootSectorData(hexDump)
             elif(operation == "FAT1"):
                 getFATEntries(hexDump)
@@ -20,11 +20,18 @@ def main():
                 FAT2 = hexDump.read(512 * 9)
                 rootDirOffset = 0x2600
                 getDataRecursivly(224, '', hexDump, 0)
+            elif(operation == "?" or operation == "help"):
+                help()
             elif(operation == "exit"):
                 exit()
             else:
                 print("Unknown command!")
 
+def help():
+    print("Available operations:")
+    print("info - print info from boot sector")
+    print("FAT1 - print info about FAT1 entries")
+    print("data - print file structure and extract all files in cwd")
 
 def getBootSectorData(hexDump):
     print("Boot sector:" + "\n")
@@ -73,7 +80,7 @@ def getBootSectorData(hexDump):
 
 def getFATEntries(hexDump):
     bootSector = hexDump.read(512)
-    FAT1 = hexDump.read(512 * 9)
+    #FAT1 = hexDump.read(512 * 9)
     #We are now in the beginning of FAT1
     #We have exaclty one entry per cluster
     for i in range(0, 200):
