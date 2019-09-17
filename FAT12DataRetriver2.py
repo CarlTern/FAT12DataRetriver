@@ -57,7 +57,8 @@ def getBootSectorData(hexDump):
     hexDump.read(6)
     bootSignature = int(binascii.hexlify(hexDump.read(1)))
     print("bootSignature: " + str(bootSignature))
-    volumeId = hexDump.read(4)
+    volumeId = hexDump.read(4).hex()
+    volumeId = volumeId[::-1]
     print("VolumeId: " + str(volumeId))
     volumeLabel = hexDump.read(11)
     print("VolumeLabel: " + str(volumeLabel))
@@ -72,6 +73,7 @@ def getBootSectorData(hexDump):
 
 def getFATEntries(hexDump):
     bootSector = hexDump.read(512)
+    FAT1 = hexDump.read(512 * 9)
     #We are now in the beginning of FAT1
     #We have exaclty one entry per cluster
     for i in range(0, 200):
@@ -189,6 +191,7 @@ def getDataRecursivly(entries, parentFileName, hexDump, counter):
         getDataRecursivly(16, fileName, newHexDump, 0)
     elif(shallBeExtracted):
         firstLogicalClusterOfFile = 33 + firstLogicalClusterOfFile - 2
+    
         newHexDump = open("./image.dat", "rb")
         newHexDump.read(firstLogicalClusterOfFile * 512)
         fileName = fileName.replace(" ", "")
